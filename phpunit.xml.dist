@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<phpunit backupGlobals="false"
+         backupStaticAttributes="false"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         processIsolation="false"
+         stopOnFailure="false"
+         syntaxCheck="false"
+         bootstrap="./tests/bootstrap.php"
+>
+
+    <php>
+        <server name="AMQP_HOST" value="localhost"/>
+        <server name="AMQP_PORT" value="5672"/>
+        <server name="AMQP_USER" value="admin"/>
+        <server name="AMQP_PASS" value="admin"/>
+        <server name="AMQP_VHOST" value="/"/>
+    </php>
+
+    <testsuites>
+        <testsuite name="EventBand Transport AmqpLib Test Suite">
+            <directory>./tests</directory>
+        </testsuite>
+    </testsuites>
+
+</phpunit>
