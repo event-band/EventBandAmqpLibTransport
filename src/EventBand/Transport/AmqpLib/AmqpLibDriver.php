@@ -72,6 +72,15 @@ class AmqpLibDriver implements AmqpDriver
     }
 
     /**
+     * Close channel
+     */
+    protected function closeChannel()
+    {
+        $this->channel->close();
+        $this->channel = null;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function publish(MessagePublication $publication, $exchange, $routingKey = '')
@@ -95,41 +104,41 @@ class AmqpLibDriver implements AmqpDriver
     public function consume($queue, callable $callback, $timeout)
     {
         try {
+            $active = true;
             $channel = $this->getChannel();
-            $channel->basic_consume(
+            $tag = $channel->basic_consume(
                 $queue,
                 '',
                 false, false, false, false,
-                function (AMQPLibMessage $msg) use ($callback, $channel, $queue) {
+                function (AMQPLibMessage $msg) use (&$active, $callback, $channel, $queue) {
                     if (!$callback(AmqpMessageUtils::createDelivery($msg, $queue))) {// Stop consuming
-                        $channel->basic_cancel($msg->delivery_info['consumer_tag']);
+                        $active = false;
                     }
                 }
             );
 
-            while (count($channel->callbacks)) {
-                $changedStreams = $this->getConnection()->select($timeout);
+            while ($active) {
+                $changedStreams = @$this->getConnection()->select($timeout);
                 if (false === $changedStreams) {
                     $error = error_get_last();
-
-                    if ($error && $error['message']) {
-                        // Check if we got interruption from system call, ex. on signal
-                        if (stripos($error['message'], 'interrupted system call') !== false) {
-                            @trigger_error(''); // clear message
-                            break;
-                        }
-
-                        throw new \RuntimeException(
-                            'Error while waiting on stream',
-                            new \ErrorException($error['message'], 0, $error['type'], $error['file'], $error['line'])
-                        );
+                    // Check if we got interruption from system call, ex. on signal
+                    if (stripos($error['message'], 'interrupted system call') !== false) {
+                        break;
                     }
+                    throw new \RuntimeException(
+                        'Error while waiting on stream',
+                        new \ErrorException($error['message'], 0, $error['type'], $error['file'], $error['line'])
+                    );
                 } elseif ($changedStreams > 0) {
                     $channel->wait();
                 } else {
                     break;
                 }
             }
+
+            // Cancel consumer and close channel
+            $channel->basic_cancel($tag);
+            $this->closeChannel();
         } catch (\Exception $e) {
             throw new DriverException('Basic consume error', $e);
         }
