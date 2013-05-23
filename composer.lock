@@ -3,21 +3,29 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "e9f8cd3672f23ec35669a0d6cada6bb7",
+    "hash": "1bf778b52bb72cd023bec025e31b7f28",
     "packages": [
         {
-            "name": "event-band/framework",
-            "version": "dev-abstaction",
+            "name": "event-band/band-framework",
+            "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "/Users/chebba/Dropbox/Projects/EventBand",
-                "reference": "28f074c246dfdb10439fe7060412581f104de224"
+                "url": "https://github.com/chEbba/EventBand.git",
+                "reference": "ad36b12b76a7df2e7d9144c10cd1656e4a51a595"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/chEbba/EventBand/zipball/ad36b12b76a7df2e7d9144c10cd1656e4a51a595",
+                "reference": "ad36b12b76a7df2e7d9144c10cd1656e4a51a595",
+                "shasum": ""
             },
             "require": {
-                "php": ">=5.4.1"
+                "php": ">=5.4.1",
+                "symfony/property-access": "2.*"
             },
             "require-dev": {
-                "phpunit/phpunit": "3.7.*"
+                "phpunit/phpunit": "3.7.*",
+                "symfony/property-access": "2.2.0"
             },
             "type": "library",
             "autoload": {
@@ -25,6 +33,7 @@
                     "EventBand": "src/"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -45,7 +54,65 @@
                 "message",
                 "queue"
             ],
-            "time": "2013-05-15 12:06:06"
+            "time": "2013-05-22 09:37:00"
+        },
+        {
+            "name": "symfony/property-access",
+            "version": "v2.2.1",
+            "target-dir": "Symfony/Component/PropertyAccess",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/PropertyAccess.git",
+                "reference": "v2.2.1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/PropertyAccess/zipball/v2.2.1",
+                "reference": "v2.2.1",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.3"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.2-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Symfony\\Component\\PropertyAccess\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "http://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony PropertyAccess Component",
+            "homepage": "http://symfony.com",
+            "keywords": [
+                "access",
+                "array",
+                "extraction",
+                "index",
+                "injection",
+                "object",
+                "property",
+                "property path",
+                "reflection"
+            ],
+            "time": "2013-03-28 15:37:15"
         },
         {
             "name": "videlalvaro/php-amqplib",
@@ -92,16 +159,16 @@
     "packages-dev": [
         {
             "name": "phpunit/php-code-coverage",
-            "version": "1.2.9",
+            "version": "1.2.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-code-coverage.git",
-                "reference": "1.2.9"
+                "reference": "1.2.10"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/1.2.9",
-                "reference": "1.2.9",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/1.2.10",
+                "reference": "1.2.10",
                 "shasum": ""
             },
             "require": {
@@ -141,7 +208,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2013-02-26 18:55:56"
+            "time": "2013-05-13 05:49:10"
         },
         {
             "name": "phpunit/php-file-iterator",
@@ -497,7 +564,7 @@
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "event-band/framework": 20
+        "event-band/band-framework": 20
     },
     "platform": {
         "php": ">=5.4.1"
