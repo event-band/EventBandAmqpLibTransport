@@ -10,6 +10,8 @@
 namespace EventBand\Transport\AmqpLib;
 
 use EventBand\Transport\Amqp\Definition\ConnectionDefinition;
+use EventBand\Transport\Amqp\Definition\ExchangeDefinition;
+use EventBand\Transport\Amqp\Definition\QueueDefinition;
 use EventBand\Transport\Amqp\Driver\AmqpDriver;
 use EventBand\Transport\Amqp\Driver\CustomAmqpMessage;
 use EventBand\Transport\Amqp\Driver\DriverException;
@@ -165,6 +167,67 @@ class AmqpLibDriver implements AmqpDriver
             $this->getChannel()->basic_reject($delivery->getTag(), true);
         } catch (\Exception $e) {
             throw new DriverException('Basic reject error', $e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function declareExchange(ExchangeDefinition $exchange)
+    {
+        try {
+            $this->getChannel()->exchange_declare(
+                $exchange->getName(),
+                $exchange->getType(),
+                false,
+                $exchange->isDurable(),
+                $exchange->isAutoDeleted(),
+                $exchange->isInternal()
+            );
+        } catch (\Exception $e) {
+            throw new DriverException('Exchange declare error', $e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function bindExchange($target, $source, $routingKey = '')
+    {
+        try {
+            $this->getChannel()->exchange_bind($target, $source, $routingKey);
+        } catch (\Exception $e) {
+            throw new DriverException(sprintf('Exchange bind error "%s":"%s"->"%s"', $source, $routingKey, $target), $e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function declareQueue(QueueDefinition $queue)
+    {
+        try {
+            $this->getChannel()->queue_declare(
+                $queue->getName(),
+                false,
+                $queue->isDurable(),
+                $queue->isExclusive(),
+                $queue->isAutoDeleted()
+            );
+        } catch (\Exception $e) {
+            throw new DriverException('Queue declare error', $e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function bindQueue($queue, $exchange, $routingKey = '')
+    {
+        try {
+            $this->getChannel()->queue_bind($queue, $exchange, $routingKey);
+        } catch (\Exception $e) {
+            throw new DriverException(sprintf('Exchange bind error "%s":"%s"->"%s"', $exchange, $routingKey, $queue), $e);
         }
     }
 }
