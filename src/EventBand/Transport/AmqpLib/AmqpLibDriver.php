@@ -105,6 +105,10 @@ class AmqpLibDriver implements AmqpDriver
      */
     public function consume($queue, callable $callback, $timeout)
     {
+        // Zero timeout = do not return, select functions expect null for it
+        if ($timeout == 0) {
+            $timeout = null;
+        }
         try {
             $active = true;
             $channel = $this->getChannel();
