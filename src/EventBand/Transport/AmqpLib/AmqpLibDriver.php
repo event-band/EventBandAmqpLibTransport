@@ -127,12 +127,19 @@ class AmqpLibDriver implements AmqpDriver
                 $changedStreams = @$this->getConnection()->select($timeout);
                 if (false === $changedStreams) {
                     $error = error_get_last();
+
+                    // On SIGTERM signal $error is null. Ubuntu 14.04, PHP 5.5.9-1ubuntu4.3
+                    if ($error === null && version_compare(PHP_VERSION, '5.5.9') != -1) {
+                        break;
                     // Check if we got interruption from system call, ex. on signal
-                    if (stripos($error['message'], 'interrupted system call') !== false) {
+                    } else if (stripos($error['message'], 'interrupted system call') !== false) {
                         break;
                     }
+
+                    // public function __construct($message = "", $code = 0, Exception $previous = null) { }
                     throw new \RuntimeException(
                         'Error while waiting on stream',
+                        0,
                         new \ErrorException($error['message'], 0, $error['type'], $error['file'], $error['line'])
                     );
                 } elseif ($changedStreams > 0) {
