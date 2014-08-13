@@ -128,11 +128,13 @@ class AmqpLibDriver implements AmqpDriver
                 if (false === $changedStreams) {
                     $error = error_get_last();
                     // Check if we got interruption from system call, ex. on signal
-                    if (stripos($error['message'], 'interrupted system call') !== false) {
+                    // On some php version (ex. php 5.5 error is null on interrupted system call)
+                    if ($error === null || stripos($error['message'], 'interrupted system call') !== false) {
                         break;
                     }
                     throw new \RuntimeException(
                         'Error while waiting on stream',
+                        0,
                         new \ErrorException($error['message'], 0, $error['type'], $error['file'], $error['line'])
                     );
                 } elseif ($changedStreams > 0) {
