@@ -223,7 +223,9 @@ class AmqpLibDriver implements AmqpDriver
                 false,
                 $queue->isDurable(),
                 $queue->isExclusive(),
-                $queue->isAutoDeleted()
+                $queue->isAutoDeleted(),
+                false,
+                $queue->getArguments()
             );
         } catch (\Exception $e) {
             throw new DriverException('Queue declare error', $e);
