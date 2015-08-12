@@ -15,8 +15,8 @@
     <php>
         <server name="AMQP_HOST" value="localhost"/>
         <server name="AMQP_PORT" value="5672"/>
-        <server name="AMQP_USER" value="admin"/>
-        <server name="AMQP_PASS" value="admin"/>
+        <server name="AMQP_USER" value="guest"/>
+        <server name="AMQP_PASS" value="guest"/>
         <server name="AMQP_VHOST" value="/"/>
     </php>
 
