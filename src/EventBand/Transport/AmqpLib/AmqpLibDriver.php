@@ -132,7 +132,7 @@ class AmqpLibDriver implements AmqpDriver
                     if (
                         $error === null
                         || stripos($error['message'], 'interrupted system call') !== false
-                        || (error_reporting() & $error['type']) === 0 // Don't consider errors not included in error reporting
+                        || $error['type'] !== E_ERROR || $error['type'] !== E_WARNING // Don't consider E_ERROR and E_WARNING errors
                     ) {
                         break;
                     }
