@@ -129,7 +129,11 @@ class AmqpLibDriver implements AmqpDriver
                     $error = error_get_last();
                     // Check if we got interruption from system call, ex. on signal
                     // On some php version (ex. php 5.5 error is null on interrupted system call)
-                    if ($error === null || stripos($error['message'], 'interrupted system call') !== false) {
+                    if (
+                        $error === null
+                        || stripos($error['message'], 'interrupted system call') !== false
+                        || $error['type'] !== E_ERROR || $error['type'] !== E_WARNING // Don't consider E_ERROR and E_WARNING errors
+                    ) {
                         break;
                     }
                     throw new \RuntimeException(
