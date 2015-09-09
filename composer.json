@@ -20,7 +20,7 @@
     "require": {
         "php": ">=5.4",
 
-        "event-band/band-framework": "~1.0",
+        "event-band/band-framework": "dev-2.0.x-connectionPool",
 
         "videlalvaro/php-amqplib": "2.0.*, >= 2.0.2"
     },

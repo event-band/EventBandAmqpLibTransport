@@ -13,13 +13,11 @@ use EventBand\Transport\Amqp\Definition\ConnectionDefinition;
 use EventBand\Transport\Amqp\Definition\ExchangeDefinition;
 use EventBand\Transport\Amqp\Definition\QueueDefinition;
 use EventBand\Transport\Amqp\Driver\AmqpDriver;
-use EventBand\Transport\Amqp\Driver\CustomAmqpMessage;
 use EventBand\Transport\Amqp\Driver\DriverException;
 use EventBand\Transport\Amqp\Driver\MessageDelivery;
 use EventBand\Transport\Amqp\Driver\MessagePublication;
 use PhpAmqpLib\Channel\AMQPChannel;
-use PhpAmqpLib\Connection\AbstractConnection;
-use PhpAmqpLib\Connection\AMQPConnection;
+use PhpAmqpLib\Connection\AMQPSocketConnection;
 use PhpAmqpLib\Message\AMQPMessage as AmqpLibMessage;
 
 /**
@@ -30,60 +28,100 @@ use PhpAmqpLib\Message\AMQPMessage as AmqpLibMessage;
  */
 class AmqpLibDriver implements AmqpDriver
 {
-    private $connectionFactory;
     /**
-     * @var AbstractConnection
+     * @var ConnectionDefinition
+     */
+    private $definition;
+
+    /**
+     * @var AMQPSocketConnection
      */
     private $connection;
+
     /**
      * @var AMQPChannel
      */
     private $channel;
 
-    public function __construct(AmqpConnectionFactory $connectionFactory)
+    /**
+     * @var bool
+     */
+    private $closed = false;
+
+    /**
+     * @param ConnectionDefinition $definition
+     */
+    public function __construct(ConnectionDefinition $definition)
     {
-        $this->connectionFactory = $connectionFactory;
+        $this->definition = $definition;
     }
 
     /**
-     * Get connection
-     *
-     * @return AbstractConnection
+     * @return bool
      */
-    protected function getConnection()
+    public function connect()
     {
-        if (!$this->connection) {
-            $this->connection = $this->connectionFactory->getConnection();
+        if ($this->isConnected()) {
+            throw new DriverException('This driver is already connected.');
         }
 
-        return $this->connection;
-    }
-
-    /**
-     * Get channel
-     *
-     * @return AMQPChannel
-     */
-    protected function getChannel()
-    {
-        if (!$this->channel) {
-            $this->channel = $this->getConnection()->channel();
+        try {
+            $this->connection = $this->getConnection();
+        } catch (DriverException $exception) {
+            return false;
         }
 
-        return $this->channel;
+        return true;
     }
 
     /**
-     * Close channel
+     * @return bool
      */
-    protected function closeChannel()
+    public function isConnected()
     {
-        $this->channel->close();
-        $this->channel = null;
+        return $this->connection !== null;
     }
 
     /**
-     * {@inheritDoc}
+     * @return bool
+     */
+    public function close()
+    {
+        try {
+            if ($this->connection !== null) {
+                $this->connection->close();
+            }
+        } catch (\Exception $exception) {
+            // pass
+        } finally {
+            $this->connection = null;
+        }
+
+        try {
+            if ($this->channel !== null) {
+                $this->channel->close();
+            }
+        } catch (\Exception $exception) {
+            // pass
+        } finally {
+            $this->connection = null;
+        }
+
+        $this->closed = true;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isClosed()
+    {
+        return $this->closed === true;
+    }
+
+    /**
+     * @param \EventBand\Transport\Amqp\Driver\MessagePublication $publication
+     * @param string                                              $exchange
+     * @param string                                              $routingKey
      */
     public function publish(MessagePublication $publication, $exchange, $routingKey = '')
     {
@@ -96,12 +134,16 @@ class AmqpLibDriver implements AmqpDriver
                 $publication->isImmediate()
             );
         } catch (\Exception $e) {
+            $this->close();
+
             throw new DriverException('Basic publish error', $e);
         }
     }
 
     /**
-     * {@inheritDoc}
+     * @param string   $queue
+     * @param callable $callback
+     * @param int      $timeout
      */
     public function consume($queue, callable $callback, $timeout)
     {
@@ -136,6 +178,9 @@ class AmqpLibDriver implements AmqpDriver
                     ) {
                         break;
                     }
+
+                    $this->close();
+
                     throw new \RuntimeException(
                         'Error while waiting on stream',
                         0,
@@ -150,38 +195,46 @@ class AmqpLibDriver implements AmqpDriver
 
             // Cancel consumer and close channel
             $channel->basic_cancel($tag);
-            $this->closeChannel();
+
+            $this->channel->close();
+            $this->channel = null;
         } catch (\Exception $e) {
+            $this->close();
+
             throw new DriverException('Basic consume error', $e);
         }
     }
 
     /**
-     * {@inheritDoc}
+     * @param \EventBand\Transport\Amqp\Driver\MessageDelivery $delivery
      */
     public function ack(MessageDelivery $delivery)
     {
         try {
             $this->getChannel()->basic_ack($delivery->getTag());
         } catch (\Exception $e) {
+            $this->close();
+
             throw new DriverException('Basic ack error', $e);
         }
     }
 
     /**
-     * {@inheritDoc}
+     * @param \EventBand\Transport\Amqp\Driver\MessageDelivery $delivery
      */
     public function reject(MessageDelivery $delivery)
     {
         try {
             $this->getChannel()->basic_reject($delivery->getTag(), true);
         } catch (\Exception $e) {
+            $this->close();
+
             throw new DriverException('Basic reject error', $e);
         }
     }
 
     /**
-     * {@inheritDoc}
+     * @param \EventBand\Transport\Amqp\Definition\ExchangeDefinition $exchange
      */
     public function declareExchange(ExchangeDefinition $exchange)
     {
@@ -195,24 +248,30 @@ class AmqpLibDriver implements AmqpDriver
                 $exchange->isInternal()
             );
         } catch (\Exception $e) {
+            $this->close();
+
             throw new DriverException('Exchange declare error', $e);
         }
     }
 
     /**
-     * {@inheritDoc}
+     * @param string $target
+     * @param string $source
+     * @param string $routingKey
      */
     public function bindExchange($target, $source, $routingKey = '')
     {
         try {
             $this->getChannel()->exchange_bind($target, $source, $routingKey);
         } catch (\Exception $e) {
+            $this->close();
+
             throw new DriverException(sprintf('Exchange bind error "%s":"%s"->"%s"', $source, $routingKey, $target), $e);
         }
     }
 
     /**
-     * {@inheritDoc}
+     * @param \EventBand\Transport\Amqp\Definition\QueueDefinition $queue
      */
     public function declareQueue(QueueDefinition $queue)
     {
@@ -227,19 +286,65 @@ class AmqpLibDriver implements AmqpDriver
                 $queue->getArguments()
             );
         } catch (\Exception $e) {
+            $this->close();
+
             throw new DriverException('Queue declare error', $e);
         }
     }
 
     /**
-     * {@inheritDoc}
+     * @param string $queue
+     * @param string $exchange
+     * @param string $routingKey
      */
     public function bindQueue($queue, $exchange, $routingKey = '')
     {
         try {
             $this->getChannel()->queue_bind($queue, $exchange, $routingKey);
         } catch (\Exception $e) {
+            $this->close();
+
             throw new DriverException(sprintf('Exchange bind error "%s":"%s"->"%s"', $exchange, $routingKey, $queue), $e);
         }
+    }
+
+    /**
+     * @return AMQPSocketConnection
+     */
+    protected function getConnection()
+    {
+        if (!$this->connection) {
+            if (!$this->definition) {
+                throw new \BadMethodCallException('Neither connection nor definition was set');
+            }
+
+            try {
+                $this->connection = new AMQPSocketConnection(
+                    $this->definition->getHost(),
+                    $this->definition->getPort(),
+                    $this->definition->getUser(),
+                    $this->definition->getPassword(),
+                    $this->definition->getVirtualHost()
+                );
+            } catch (\Exception $exception) {
+                throw new DriverException('Can\'t connection to RabbitMQ node', $exception);
+            }
+        }
+
+        return $this->connection;
+    }
+
+    /**
+     * Get channel
+     *
+     * @return \PhpAmqpLib\Channel\AMQPChannel
+     */
+    protected function getChannel()
+    {
+        if (!$this->channel) {
+            $this->channel = $this->getConnection()->channel();
+        }
+
+        return $this->channel;
     }
 }
