@@ -119,6 +119,22 @@ class AmqpLibDriver implements AmqpDriver
     }
 
     /**
+     * @return bool
+     */
+    public function reset()
+    {
+        if ($this->isClosed()) {
+            $this->close();
+        }
+
+        $this->closed = false;
+        $this->channel = null;
+        $this->connection = null;
+
+        return true;
+    }
+
+    /**
      * @param \EventBand\Transport\Amqp\Driver\MessagePublication $publication
      * @param string                                              $exchange
      * @param string                                              $routingKey
