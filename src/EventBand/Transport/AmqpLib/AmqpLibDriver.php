@@ -242,4 +242,22 @@ class AmqpLibDriver implements AmqpDriver
             throw new DriverException(sprintf('Exchange bind error "%s":"%s"->"%s"', $exchange, $routingKey, $queue), $e);
         }
     }
+
+    public function deleteExchange(ExchangeDefinition $exchange, $ifUnused = false, $nowait = false)
+    {
+        try {
+            $this->getChannel()->exchange_delete($exchange, $ifUnused, $nowait);
+        } catch (\Exception $e) {
+            throw new DriverException(sprintf('Exchange delete error "%s"', $exchange), $e);
+        }
+    }
+
+    public function deleteQueue(QueueDefinition $queue, $ifUnused = false, $ifEmpty = false, $nowait = false)
+    {
+        try {
+            $this->getChannel()->queue_delete($queue, $ifUnused, $ifEmpty, $nowait);
+        } catch (\Exception $e) {
+            throw new DriverException('Queue delete error', $e);
+        }
+    }
 }
