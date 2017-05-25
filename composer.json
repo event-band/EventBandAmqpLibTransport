@@ -22,7 +22,7 @@
 
         "event-band/band-framework": "~1.0",
 
-        "php-amqplib/php-amqplib": "2.0.*, >= 2.0.2"
+        "php-amqplib/php-amqplib": "~2.6"
     },
 
     "require-dev": {
