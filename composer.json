@@ -18,9 +18,11 @@
     },
 
     "require": {
-        "php": ">=5.4.1",
-        "event-band/band-framework": "dev-master",
-        "videlalvaro/php-amqplib": "2.0.*, >= 2.0.2"
+        "php": ">=5.4",
+
+        "event-band/band-framework": "~1.0",
+
+        "php-amqplib/php-amqplib": "~2.6"
     },
 
     "require-dev": {

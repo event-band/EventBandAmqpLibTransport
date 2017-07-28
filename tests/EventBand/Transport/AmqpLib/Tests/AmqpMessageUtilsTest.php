@@ -84,7 +84,9 @@ class AmqpMessageUtilsTest extends TestCase
         $amqpLibMessage = AmqpMessageUtils::createAmqpLibMessage($message);
 
         $this->assertEquals('body content', $amqpLibMessage->body);
-        $this->assertEquals($properties['headers'], $amqpLibMessage->get('application_headers'));
+        if ($amqpLibMessage->has('application_headers')) {
+            $this->assertEquals($properties['headers'], $amqpLibMessage->get('application_headers'));
+        }
         $this->assertEquals($properties['contentType'], $amqpLibMessage->get('content_type'));
         $this->assertEquals($properties['contentEncoding'], $amqpLibMessage->get('content_encoding'));
         $this->assertEquals($properties['messageId'], $amqpLibMessage->get('message_id'));

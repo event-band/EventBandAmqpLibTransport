@@ -26,7 +26,6 @@ final class AmqpMessageUtils
     const DELIVERY_MODE_PERSISTENT = 2;
 
     private static $PROPERTY_MAP = [
-        'headers' => 'application_headers',
         'contentType' => 'content_type',
         'contentEncoding' => 'content_encoding',
         'messageId' => 'message_id',
@@ -51,6 +50,9 @@ final class AmqpMessageUtils
             if ($message->has($amqpLibName)) {
                 $properties[$name] = $message->get($amqpLibName);
             }
+        }
+        if ($message->has('application_headers')) {
+            $properties['headers'] = $message->get('application_headers');
         }
 
         return CustomAmqpMessage::fromProperties($properties);
