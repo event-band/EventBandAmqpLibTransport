@@ -52,7 +52,7 @@ final class AmqpMessageUtils
             }
         }
         if ($message->has('application_headers')) {
-            $properties['headers'] = $message->get('application_headers')->getNativeData();
+            $properties['headers'] = $message->get('application_headers');
         }
 
         return CustomAmqpMessage::fromProperties($properties);
