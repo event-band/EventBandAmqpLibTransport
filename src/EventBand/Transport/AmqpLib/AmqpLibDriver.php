@@ -123,7 +123,15 @@ class AmqpLibDriver implements AmqpDriver
                 }
             );
 
+            $startTime = time();
             while ($active) {
+                if ($timeout) {
+                    $newTimeout = $startTime + $timeout - time();
+                    if ($newTimeout <= 0) {
+                        break;
+                    }
+                    $timeout = $newTimeout;
+                }
                 $changedStreams = @$this->getConnection()->select($timeout);
                 if (false === $changedStreams) {
                     $error = error_get_last();
