@@ -103,11 +103,11 @@ class AmqpLibDriver implements AmqpDriver
     /**
      * {@inheritDoc}
      */
-    public function consume($queue, callable $callback, $timeout)
+    public function consume($queue, callable $callback, $idleTimeout, $timeout = null)
     {
         // Zero timeout = do not return, select functions expect null for it
-        if ($timeout == 0) {
-            $timeout = null;
+        if ($idleTimeout == 0) {
+            $idleTimeout = null;
         }
         try {
             $active = true;
@@ -126,13 +126,13 @@ class AmqpLibDriver implements AmqpDriver
             $startTime = time();
             while ($active) {
                 if ($timeout) {
-                    $newTimeout = $startTime + $timeout - time();
+                    $newTimeout = min($startTime + $idleTimeout - time(), $idleTimeout);
                     if ($newTimeout <= 0) {
                         break;
                     }
-                    $timeout = $newTimeout;
+                    $idleTimeout = $newTimeout;
                 }
-                $changedStreams = @$this->getConnection()->select($timeout);
+                $changedStreams = @$this->getConnection()->select($idleTimeout);
                 if (false === $changedStreams) {
                     $error = error_get_last();
                     // Check if we got interruption from system call, ex. on signal
