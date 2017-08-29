@@ -20,7 +20,7 @@
     "require": {
         "php": ">=5.4",
 
-        "event-band/band-framework": "~1.0",
+        "event-band/band-framework": "~2.0",
 
         "php-amqplib/php-amqplib": "~2.6"
     },
