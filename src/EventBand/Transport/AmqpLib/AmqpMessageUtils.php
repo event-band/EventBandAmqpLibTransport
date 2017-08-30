@@ -13,6 +13,7 @@ use EventBand\Transport\Amqp\Driver\AmqpMessage;
 use EventBand\Transport\Amqp\Driver\CustomAmqpMessage;
 use EventBand\Transport\Amqp\Driver\MessageDelivery;
 use PhpAmqpLib\Message\AMQPMessage as AmqpLibMessage;
+use PhpAmqpLib\Wire\AMQPTable;
 
 /**
  * Utils for AMQPMessage driver adoption
@@ -52,7 +53,12 @@ final class AmqpMessageUtils
             }
         }
         if ($message->has('application_headers')) {
-            $properties['headers'] = $message->get('application_headers');
+            $headers = $message->get('application_headers');
+            if ($headers instanceof AMQPTable) {
+                $properties['headers'] = $headers->getNativeData();
+            } elseif (is_array($headers)) {
+                $properties['headers'] = $headers;
+            }
         }
 
         return CustomAmqpMessage::fromProperties($properties);
