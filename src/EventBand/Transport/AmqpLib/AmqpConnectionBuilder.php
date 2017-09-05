@@ -5,9 +5,10 @@
 
 namespace EventBand\Transport\AmqpLib;
 
+use EventBand\Transport\Amqp\Definition\ConnectionBuilder;
 use EventBand\Transport\Amqp\Definition\ConnectionDefinition;
 use PhpAmqpLib\Connection\AbstractConnection;
-use PhpAmqpLib\Connection\AMQPSocketConnection;
+use PhpAmqpLib\Connection\AMQPLazyConnection;
 
 /**
  * Class AmqpConnectionBuilder
@@ -53,12 +54,20 @@ class AmqpConnectionBuilder implements AmqpConnectionFactory
 
     public static function createDefinedConnection(ConnectionDefinition $definition)
     {
-        return new AMQPSocketConnection(
+        return new AMQPLazyConnection(
             $definition->getHost(),
             $definition->getPort(),
             $definition->getUser(),
             $definition->getPassword(),
-            $definition->getVirtualHost()
+            $definition->getVirtualHost(),
+            $definition->getInsist(),
+            $definition->getLoginMethod(),
+            $definition->getLoginResponse(),
+            $definition->getLocale(),
+            $definition->getConnectionTimeout(),
+            $definition->getReadWriteTimeout(),
+            $definition->getContext(),
+            $definition->getHeartbeat()
         );
     }
 }
