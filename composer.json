@@ -18,9 +18,9 @@
     },
 
     "require": {
-        "php": ">=5.4",
+        "php": ">=7.0",
 
-        "event-band/band-framework": "dev-feature/heartbeats",
+        "event-band/band-framework": "~2.0 >=2.2.0",
 
         "php-amqplib/php-amqplib": "~2.6"
     },
