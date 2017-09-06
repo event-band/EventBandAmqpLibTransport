@@ -67,6 +67,7 @@ class AmqpConnectionBuilder implements AmqpConnectionFactory
             $definition->getConnectionTimeout(),
             $definition->getReadWriteTimeout(),
             $definition->getContext(),
+            $definition->getKeepalive(),
             $definition->getHeartbeat()
         );
     }
