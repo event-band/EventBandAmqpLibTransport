@@ -9,17 +9,15 @@
 
 namespace EventBand\Transport\AmqpLib;
 
-use EventBand\Transport\Amqp\Definition\ConnectionDefinition;
 use EventBand\Transport\Amqp\Definition\ExchangeDefinition;
 use EventBand\Transport\Amqp\Definition\QueueDefinition;
 use EventBand\Transport\Amqp\Driver\AmqpDriver;
-use EventBand\Transport\Amqp\Driver\CustomAmqpMessage;
 use EventBand\Transport\Amqp\Driver\DriverException;
 use EventBand\Transport\Amqp\Driver\MessageDelivery;
 use EventBand\Transport\Amqp\Driver\MessagePublication;
+use EventBand\Transport\StoppableTransport;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AbstractConnection;
-use PhpAmqpLib\Connection\AMQPConnection;
 use PhpAmqpLib\Message\AMQPMessage as AmqpLibMessage;
 
 /**
@@ -28,7 +26,7 @@ use PhpAmqpLib\Message\AMQPMessage as AmqpLibMessage;
  * @author Kirill chEbba Chebunin <iam@chebba.org>
  * @license http://opensource.org/licenses/mit-license.php MIT
  */
-class AmqpLibDriver implements AmqpDriver
+class AmqpLibDriver implements AmqpDriver, StoppableTransport
 {
     private $connectionFactory;
     /**
@@ -39,6 +37,10 @@ class AmqpLibDriver implements AmqpDriver
      * @var AMQPChannel
      */
     private $channel;
+
+    private $currentTag;
+
+    private $stopped = false;
 
     public function __construct(AmqpConnectionFactory $connectionFactory)
     {
@@ -112,7 +114,7 @@ class AmqpLibDriver implements AmqpDriver
         try {
             $active = true;
             $channel = $this->getChannel();
-            $tag = $channel->basic_consume(
+            $this->currentTag = $channel->basic_consume(
                 $queue,
                 '',
                 false, false, false, false,
@@ -125,6 +127,9 @@ class AmqpLibDriver implements AmqpDriver
 
             $startTime = time();
             while ($active) {
+                if ($this->stopped) {
+                    break;
+                }
                 if ($timeout) {
                     $newTimeout = min($startTime + $idleTimeout - time(), $idleTimeout);
                     if ($newTimeout <= 0) {
@@ -157,7 +162,7 @@ class AmqpLibDriver implements AmqpDriver
             }
 
             // Cancel consumer and close channel
-            $channel->basic_cancel($tag);
+            $channel->basic_cancel($this->currentTag);
             $this->closeChannel();
         } catch (\Exception $e) {
             throw new DriverException('Basic consume error', $e);
@@ -267,5 +272,11 @@ class AmqpLibDriver implements AmqpDriver
         } catch (\Exception $e) {
             throw new DriverException(sprintf('Queue delete error "%s"', $queue->getName()) , $e);
         }
+    }
+
+    public function stop()
+    {
+        $this->stopped = true;
+        $this->getChannel()->basic_cancel($this->currentTag, false, true);
     }
 }

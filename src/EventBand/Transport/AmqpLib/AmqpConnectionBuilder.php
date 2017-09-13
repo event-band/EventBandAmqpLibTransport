@@ -1,18 +1,19 @@
 <?php
 /**
- * @LICENSE_TEXT
+ * @author Kirill chEbba Chebunin <iam@chebba.org>
+ * @author Vasil coylOne Kulakov <kulakov@vasiliy.pro>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this package in the file LICENSE.
  */
 
 namespace EventBand\Transport\AmqpLib;
 
-use EventBand\Transport\Amqp\Definition\ConnectionBuilder;
 use EventBand\Transport\Amqp\Definition\ConnectionDefinition;
 use PhpAmqpLib\Connection\AbstractConnection;
 use PhpAmqpLib\Connection\AMQPLazyConnection;
 
 /**
- * Class AmqpConnectionBuilder
- *
  * @author Kirill chEbba Chebunin <iam@chebba.org>
  */
 class AmqpConnectionBuilder implements AmqpConnectionFactory
